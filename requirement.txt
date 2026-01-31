@@ -1,5 +1,6 @@
-pip install yfinance pandas
-pip install scikit-learn
-pip install pandas numpy
+yfinance pandas
+scikit-learn
+pandas numpy
 torch
 torch.nn
+os

@@ -3,15 +3,24 @@ import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 import torch
 import torch.nn as nn
+import os
 
-filename = "model.bin"
+csv_path = "data/data.csv"
+model_path = "models/model.bin"
+
 window_size = 60 #nb day
+
+os.makedirs("models", exist_ok=True)
 
 X_train =[]
 y_train = []
 
 # Clean
-data = pd.read_csv("data.csv")
+print(f"load {csv_path}...")
+try:
+    data = pd.read_csv(csv_path)
+except FileNotFoundError:
+    print(csv_path+ " Not Found")
 
 closes = data[["Close"]].values
 
@@ -58,7 +67,7 @@ optimizer = torch.optim.Adam(model.parameters() , lr=0.001)
 
 print("--- Start Training ---")
 
-for i in range(1000):
+for i in range(600000):
     outputs = model(X_torch)
     loss = criterion(outputs , y_torch)
     optimizer.zero_grad()
@@ -73,7 +82,7 @@ print("--- End Training ---")
 
 print("\n--- Save Bin for C ---")
 
-with open(filename, "wb") as f:
+with open(model_path, "wb") as f:
     for param in model.parameters():
         data = param.detach() 
         data = data.numpy()
