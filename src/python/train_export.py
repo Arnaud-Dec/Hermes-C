@@ -83,6 +83,9 @@ print("--- End Training ---")
 print("\n--- Save Bin for C ---")
 
 with open(model_path, "wb") as f:
+    
+    np.array([scaler.data_min_[0], scaler.data_max_[0]], dtype=np.float32).tofile(f)
+    
     for param in model.parameters():
         data = param.detach() 
         data = data.numpy()
