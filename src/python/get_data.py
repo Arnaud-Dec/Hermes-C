@@ -1,15 +1,38 @@
 import yfinance as yf
 import os
 
-os.makedirs("data", exist_ok=True)
+# --- Configuration ---
+TICKER = "BTC-USD"
+PERIOD = "2y"
+INTERVAL = "1d"
+DATA_DIR = "data"
+CSV_PATH = os.path.join(DATA_DIR, "data.csv")
 
-actif = yf.Ticker("BTC-USD")
+def main():
+    print(f"[INFO] Starting data download for {TICKER}...")
 
-data = actif.history(period="2y", interval="1d")
+    # Ensure data directory exists
+    os.makedirs(DATA_DIR, exist_ok=True)
 
-data = data[["Close"]]
-data = data.dropna()
+    # Download data
+    try:
+        actif = yf.Ticker(TICKER)
+        df = actif.history(period=PERIOD, interval=INTERVAL)
+        
+        if df.empty:
+            print("[ERROR] No data downloaded. Check your internet or the ticker name.")
+            return
 
-print("Save in data/data.csv...")
-data.to_csv("data/data.csv")
-print("Finish")
+        # Keep only Close price and remove empty rows
+        df = df[["Close"]]
+        df = df.dropna()
+
+        # Save to CSV
+        df.to_csv(CSV_PATH)
+        print(f"[SUCCESS] Data saved to {CSV_PATH} ({len(df)} rows)")
+
+    except Exception as e:
+        print(f"[ERROR] An error occurred: {e}")
+
+if __name__ == "__main__":
+    main()

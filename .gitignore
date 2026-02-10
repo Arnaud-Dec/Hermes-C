@@ -1,6 +1,18 @@
-data.csv
-.venv
-model.bin
-TODO.md
-.vscode/
+# Python
+__pycache__/
+.venv/
+
+# C / Compilation
+*.o
+*.exe
 hermes
+
+# Data & Models 
+data/
+models/
+
+# VS Code
+.vscode/
+
+# Misc
+TODO.md

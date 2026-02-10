@@ -1,6 +1,5 @@
-yfinance pandas
+numpy
+pandas
 scikit-learn
-pandas numpy
 torch
-torch.nn
-os
+yfinance
