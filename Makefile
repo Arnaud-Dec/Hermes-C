@@ -4,7 +4,7 @@ CC := gcc
 CFLAGS := -Wall -I src/c
 SRC := src/c/main.c
 TARGET ?= hermes
-PYTHON ?= PYTHON := .venv/bin/python
+PYTHON ?= .venv/bin/python
 
 all: $(TARGET)
 
@@ -13,6 +13,7 @@ $(TARGET): $(SRC)
 	$(CC) $(CFLAGS) $(SRC) -o $(TARGET)
 
 clean:
+	@echo "[MAKE] Delete hermes"
 	rm -f $(TARGET)
 
 data:
@@ -26,5 +27,3 @@ train:
 full: data train all
 	@echo "[MAKE] Launching Hermes..."
 	./$(TARGET)
-
-
