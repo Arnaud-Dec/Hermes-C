@@ -1,7 +1,7 @@
 .PHONY: all clean data train full
 
 CC := gcc
-CFLAGS := -Wall -I src/c
+CFLAGS := -Wall -Wextra -I src/c
 SRC := src/c/main.c
 TARGET ?= hermes
 PYTHON ?= .venv/bin/python

@@ -10,7 +10,7 @@
 #define DATA_PATH "data/data.csv"
 
 // --- Function Prototypes ---
-float forward_pass(struct NeuralNetwork *nn, float input[INPUT_SIZE]);
+float forward_pass(const struct NeuralNetwork *nn, const float input[INPUT_SIZE]);
 int load_csv_data(const char *filename, float *output_array);
 
 // --- Main Application ---
@@ -18,7 +18,7 @@ int main() {
     printf("[INFO] --- Start Hermes-C Engine ---\n");
 
     // 1. Load Model (Brain)
-    struct NeuralNetwork nn;
+    struct NeuralNetwork nn = {0};
     FILE *f = fopen(MODEL_PATH, "rb");
     
     if (f == NULL) { 
@@ -91,7 +91,7 @@ int main() {
  * Performs the forward pass (inference) of the Neural Network.
  * Structure: Input (60) -> Linear -> ReLU -> Hidden (32) -> Linear -> Output (1)
  */
-float forward_pass(struct NeuralNetwork *nn, float input[INPUT_SIZE]) {
+float forward_pass(const struct NeuralNetwork *nn, const float input[INPUT_SIZE]) {
     // 1. Hidden Layer
     float hidden[HIDDEN_SIZE];
     
@@ -132,14 +132,15 @@ int load_csv_data(const char *filename, float *output_array) {
 
     char line[1024];
     int count = 0;
+    char *saveptr;
 
     // Skip Header
     fgets(line, sizeof(line), f);
     
     while (fgets(line, sizeof(line), f) && count < MAX_DATA_ROWS) {
         // Parse CSV line
-        char *token = strtok(line, ","); // First token (Date) - unused
-        token = strtok(NULL, ",");       // Second token (Close)
+        strtok_r(line, ",", &saveptr); // First token (Date) - unused
+        char *token = strtok_r(NULL, ",", &saveptr); // Second token (Close)
         
         if (token != NULL) {
             output_array[count] = atof(token);

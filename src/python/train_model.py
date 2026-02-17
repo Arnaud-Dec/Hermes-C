@@ -11,7 +11,7 @@ MODEL_DIR = "models"
 MODEL_PATH = os.path.join(MODEL_DIR, "model.bin")
 WINDOW_SIZE = 60
 HIDDEN_SIZE = 32
-EPOCHS = 600000 # You can reduce this for testing
+EPOCHS = 6000 # You can reduce this for testing
 LEARNING_RATE = 0.001
 PRINT_EVERY = 10000
 
@@ -57,21 +57,21 @@ def main():
     y_train = np.array(y_train)
 
     # Convert to PyTorch Tensors
-    X_torch = torch.tensor(X_train).float().view(-1, WINDOW_SIZE)
+    x_torch = torch.tensor(X_train).float().view(-1, WINDOW_SIZE)
     y_torch = torch.tensor(y_train).float().view(-1, 1)
 
-    print(f"[INFO] Training Data Shape: X={X_torch.shape}, y={y_torch.shape}")
+    print(f"[INFO] Training Data Shape: X={x_torch.shape}, y={y_torch.shape}")
 
     # 4. Initialize Model
     model = TradingModel()
     criterion = nn.MSELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
+    optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE , weight_decay=1e-5)
 
     # 5. Training Loop
     print(f"[TRAIN] Starting training for {EPOCHS} epochs...")
     
     for i in range(EPOCHS):
-        outputs = model(X_torch)
+        outputs = model(x_torch)
         loss = criterion(outputs, y_torch)
         
         optimizer.zero_grad()
