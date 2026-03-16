@@ -148,4 +148,4 @@ make all
 Projet open-source sous licence **MIT**.
 
 ## Version
-**V1.0.0**
+**v1.1.0**
