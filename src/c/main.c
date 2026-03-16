@@ -140,10 +140,10 @@ int load_csv_data(const char *filename, float *output_array) {
     while (fgets(line, sizeof(line), f) && count < MAX_DATA_ROWS) {
         // Parse CSV line
         strtok_r(line, ",", &saveptr); // First token (Date) - unused
-        char *token = strtok_r(NULL, ",", &saveptr); // Second token (Close)
+        const char *token = strtok_r(NULL, ",", &saveptr); // Second token (Close)
         
         if (token != NULL) {
-            output_array[count] = atof(token);
+            output_array[count] = strtof(token, NULL);
             count++;
         }
     }

@@ -35,5 +35,6 @@ jobs:
         with:
           args: >
             -Dsonar.projectKey=Arnaud-Dec_Hermes-C
+            -Dsonar.python.version=3.12.3
             -Dsonar.organization=arnaud-dec
             -Dsonar.cfamily.compile-commands=${{ env.BUILD_WRAPPER_OUT_DIR }}/compile_commands.json
