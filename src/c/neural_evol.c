@@ -4,6 +4,8 @@
 #include <math.h>
 #include <string.h>
 #include "NeuralNetwork.h"
+#include "ThreadArgs.h"
+#include <pthread.h>
 
 // ==========================================
 // 1. OUTILS ET MEMOIRE
@@ -71,10 +73,10 @@ void compute_returns(float *prices, int total_days) {
 
 int randomize_weights(int nbIndividual, struct NeuralNetwork **neural_network) {
     for (int i = 0; i < nbIndividual; i++) {
-        for (int j = 0; j < sizeof(neural_network[i]->B1) / sizeof(float); j++) neural_network[i]->B1[j] = random_float();
-        for (int j = 0; j < sizeof(neural_network[i]->B2) / sizeof(float); j++) neural_network[i]->B2[j] = random_float();
-        for (int j = 0; j < sizeof(neural_network[i]->W1) / sizeof(float); j++) neural_network[i]->W1[j] = random_float();
-        for (int j = 0; j < sizeof(neural_network[i]->W2) / sizeof(float); j++) neural_network[i]->W2[j] = random_float();
+        for (size_t j = 0; j < sizeof(neural_network[i]->B1) / sizeof(float); j++) neural_network[i]->B1[j] = random_float();
+        for (size_t j = 0; j < sizeof(neural_network[i]->B2) / sizeof(float); j++) neural_network[i]->B2[j] = random_float();
+        for (size_t j = 0; j < sizeof(neural_network[i]->W1) / sizeof(float); j++) neural_network[i]->W1[j] = random_float();
+        for (size_t j = 0; j < sizeof(neural_network[i]->W2) / sizeof(float); j++) neural_network[i]->W2[j] = random_float();
     }
     return 0;
 }
@@ -116,35 +118,73 @@ void sort_population(int nbIndividual, struct NeuralNetwork **population) {
     qsort(population, nbIndividual, sizeof(struct NeuralNetwork *), compare_fitness);
 }
 
-int evaluate_population(int nbIndividual, struct NeuralNetwork **population, const float *historical_prices, int total_days) {
+void *evaluate_worker(void *arg) {
 
-    // PROTECTION : S'assurer qu'on a assez de jours pour remplir INPUT_SIZE !
-    if (total_days <= INPUT_SIZE) {
-        printf("[FATAL] Pas assez de donnees (%d jours) pour une IA qui demande %d jours.\n", total_days, INPUT_SIZE);
-        return -1;
-    }
+    struct ThreadArgs *my_args = (struct ThreadArgs *)arg;
 
-    int days_tested = total_days - INPUT_SIZE;
+    int start = my_args->start_index;
+    int end = my_args->end_index;
+    struct NeuralNetwork **pop = my_args->pop;
+    const float *prices = my_args->prices;
+    int days = my_args->total_days;
 
-    for (int i = 0; i < nbIndividual; i++) {
+    int days_tested = days - INPUT_SIZE;
+
+    for (int i = start; i < end; i++) {
         float total_error = 0.0f;
 
         // FENETRE GLISSANTE
-        for (int day = INPUT_SIZE; day < total_days; day++) {
-            float prediction = forward_pass(population[i], &historical_prices[day - INPUT_SIZE]);
-            float target = historical_prices[day];
+        for (int day = INPUT_SIZE; day < days; day++) {
+            float prediction = forward_pass(pop[i], &prices[day - INPUT_SIZE]);
+            float target = prices[day];
             total_error += fabs(prediction - target);
         }
 
         float avg_error = total_error / (float)days_tested;
 
-        // PROTECTION CONTRE LES NaN (Not a Number) !
         if (isnan(avg_error) || isinf(avg_error)) {
-            population[i]->fitness = 0.0f; // Cerveau cassé = note de 0
+            pop[i]->fitness = 0.0f;
         } else {
-            population[i]->fitness = 1.0f / (avg_error + 0.00001f);
+            pop[i]->fitness = 1.0f / (avg_error + 0.00001f);
         }
     }
+
+    return NULL;
+}
+
+int evaluate_population(int nbIndividual, struct NeuralNetwork **population, const float *historical_prices, int total_days ,int num_threads) {
+
+    if (total_days <= INPUT_SIZE) {
+        printf("[FATAL] Pas assez de donnees (%d jours) pour une IA qui demande %d jours.\n", total_days, INPUT_SIZE);
+        return -1;
+    }
+
+    pthread_t threads[num_threads];
+    struct ThreadArgs args[num_threads];
+
+    int chunk_size = nbIndividual / num_threads;
+
+    for (int i = 0; i < num_threads; i++) {
+        args[i].pop = population;
+        args[i].prices = historical_prices;
+        args[i].total_days = total_days;
+
+        args[i].start_index = i * chunk_size;
+
+        if (i == num_threads - 1) {
+            args[i].end_index = nbIndividual;
+        } else {
+            args[i].end_index = (i + 1) * chunk_size;
+        }
+
+        // Lancement !
+        pthread_create(&threads[i], NULL, evaluate_worker, &args[i]);
+    }
+
+    for (int i = 0; i < num_threads; i++) {
+        pthread_join(threads[i], NULL);
+    }
+
     return 0;
 }
 
@@ -188,6 +228,7 @@ int main(void) {
     int generations = 100;
     const int nbIndividual = 1000; // Mis à 1000 pour bien voir l'évolution !
     float mutation_rate = 0.05f;
+    int num_thread = 12;
 
     // --- LECTURE DES DONNEES ---
     float *historical_prices = malloc(MAX_DAYS * sizeof(float));
@@ -216,7 +257,7 @@ int main(void) {
     // --- BOUCLE D'ENTRAINEMENT ---
     for (int i = 0 ; i < generations ; i++) {
 
-        evaluate_population(nbIndividual, pointerIndividual, historical_prices, total_days);
+        evaluate_population(nbIndividual, pointerIndividual, historical_prices, total_days , num_thread);
         sort_population(nbIndividual, pointerIndividual);
 
         printf("Generation %d | Best Fitness: %f\n", i, pointerIndividual[0]->fitness);
