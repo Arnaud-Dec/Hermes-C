@@ -15,6 +15,8 @@ struct NeuralNetwork {
     float B1[HIDDEN_SIZE];              // Bias Layer 1
     float W2[OUTPUT_SIZE * HIDDEN_SIZE];// Weights Layer 2 (Output)
     float B2[OUTPUT_SIZE];              // Bias Layer 2 (Output)
+
+    float fitness;
 };
 
 #endif
