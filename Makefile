@@ -1,29 +1,44 @@
-.PHONY: all clean data train full
+.PHONY: all clean data train full cpu cuda
 
-CC := gcc
-CFLAGS := -Wall -Wextra -I src/c
-SRC := src/c/main.c
-TARGET ?= hermes
+# --- Configuration Commune ---
+INCLUDE_DIR := -I include
 PYTHON ?= .venv/bin/python
 
-all: $(TARGET)
+# --- Configuration CPU (C standard) ---
+CC := gcc
+CFLAGS := -Wall -Wextra $(INCLUDE_DIR) -pthread
+LDFLAGS := -lm -pthread
+SRC_CPU := src/cpu/neural_evol.c
+TARGET_CPU := hermes_cpu
 
-$(TARGET): $(SRC)
-	@echo "[MAKE] Compiling C Engine..."
-	$(CC) $(CFLAGS) $(SRC) -o $(TARGET)
+# --- Configuration GPU (CUDA) ---
+NVCC := nvcc
+CUFLAGS := $(INCLUDE_DIR)
+SRC_GPU := src/gpu/neural_evol.cu
+TARGET_GPU := hermes_cuda
+
+# ==========================================
+# COMMANDES
+# ==========================================
+
+all: cpu
+
+cpu: $(SRC_CPU)
+	@echo "[MAKE] Compiling CPU Engine..."
+	$(CC) $(CFLAGS) $(SRC_CPU) -o $(TARGET_CPU) $(LDFLAGS)
+
+cuda: $(SRC_GPU)
+	@echo "[MAKE] Compiling CUDA Engine..."
+	$(NVCC) $(CUFLAGS) $(SRC_GPU) -o $(TARGET_GPU)
 
 clean:
-	@echo "[MAKE] Delete hermes"
-	rm -f $(TARGET)
+	@echo "[MAKE] Delete executables..."
+	rm -f $(TARGET_CPU) $(TARGET_GPU)
 
 data:
 	@echo "[MAKE] Downloading Data..."
 	$(PYTHON) src/python/get_data.py
 
-train:
-	@echo "[MAKE] Training Model..."
-	$(PYTHON) src/python/train_model.py
-
-full: data train all
-	@echo "[MAKE] Launching Hermes..."
-	./$(TARGET)
+full: data cpu
+	@echo "[MAKE] Launching Hermes (CPU)..."
+	./$(TARGET_CPU)

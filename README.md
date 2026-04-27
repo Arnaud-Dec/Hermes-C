@@ -27,6 +27,9 @@ python -m venv .venv
 # Activation (Windows)
 .\.venv\Scripts\activate
 
+# Activation linux
+source .venv/bin/activate
+
 # Installation des dépendances
 pip install -r requirements.txt
 ```
