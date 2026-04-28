@@ -15,6 +15,27 @@ float random_float() {
     return ((float)rand() / (float)RAND_MAX) * 2.0f - 1.0f;
 }
 
+int save_network(const struct NeuralNetwork *brain, const char *filename) {
+
+    FILE *file = fopen(filename, "wb");
+    if (file == NULL) {
+        printf("[ERROR] Impossible de creer le fichier de sauvegarde %s\n", filename);
+        return -1;
+    }
+
+    size_t written = fwrite(brain, sizeof(struct NeuralNetwork), 1, file);
+
+    fclose(file);
+
+    if (written == 1) {
+        printf("[SUCCESS] Cerveau sauvegarde avec succes dans : %s\n", filename);
+        return 0;
+    } else {
+        printf("[ERROR] Probleme d'ecriture pendant la sauvegarde.\n");
+        return -1;
+    }
+}
+
 // ==========================================
 // 2. DONNEES ET NORMALISATION
 // ==========================================
